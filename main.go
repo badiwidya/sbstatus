@@ -35,18 +35,18 @@ func main() {
 
 	bri, err := bl.New("/sys/class/backlight")
 	if err != nil {
-		log.Fatal("[ERROR]", err)
+		log.Fatalf("[ERROR] brightness monitor: %s\n", err)
 	}
 
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
-		log.Fatal("[ERROR]", err)
+		log.Fatalf("[ERROR] brightness watcher: %s\n", err)
 	}
 	defer watcher.Close()
 
 	err = watcher.Add(bri.BrightnessPath)
 	if err != nil {
-		log.Fatal("[ERROR]", err)
+		log.Fatalf("[ERROR] brightness watcher: %s\n", err)
 	}
 
 	ticker := time.NewTicker(1 * time.Second)
@@ -73,7 +73,7 @@ func main() {
 			if !ok {
 				return
 			}
-			log.Println("[ERROR]", err)
+			log.Printf("[ERROR] brightness watcher: %s\n", err)
 		}
 	}
 }
@@ -84,6 +84,7 @@ func printStatus(bri *bl.Backlight) {
 
 	briVal, err := bri.GetPercentage()
 	if err != nil {
+		log.Printf("[ERROR] brightness monitor: %s\n", err)
 		briText += "ERR"
 	} else {
 		briText += fmt.Sprintf("%d%%", int(briVal*100))
@@ -105,7 +106,7 @@ func getVolume() string {
 	cmd := exec.Command("wpctl", "get-volume", "@DEFAULT_SINK@")
 	out, err := cmd.Output()
 	if err != nil {
-		log.Println("[ERROR]", err)
+		log.Printf("[ERROR] volume monitor: %s\n", err)
 		return "ERR"
 	}
 
@@ -117,7 +118,7 @@ func getVolume() string {
 
 	parts := strings.Fields(text)
 	if len(parts) < 2 {
-		log.Println("[ERROR] output parts is less than 2")
+		log.Printf("[ERROR] output parts is less than 2: %v\n", parts)
 		return "ERR"
 	}
 
@@ -125,7 +126,7 @@ func getVolume() string {
 
 	volFloat, err := strconv.ParseFloat(volStr, 64)
 	if err != nil {
-		log.Println("[ERROR]", err)
+		log.Printf("[ERROR] volume monitor: %s\n", err)
 		return "ERR"
 	}
 
