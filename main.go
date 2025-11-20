@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"os"
 	"os/exec"
 	"strconv"
 	"strings"
@@ -92,7 +93,10 @@ func printStatus(bri *bl.Backlight) {
 
 	volText := fmt.Sprintf("<span foreground=\"#fabd2f\">VOL</span> %s", getVolume())
 
+	batText := fmt.Sprintf("<span foreground=\"#fabd2f\">BAT</span> %s", getBattery())
+
 	modules := []status{
+		{Name: "battery", FullText: batText, Markup: "pango", Separator: separator, SeparatorBlockWidth: separatorBlockWidth},
 		{Name: "volume", FullText: volText, Markup: "pango", Separator: separator, SeparatorBlockWidth: separatorBlockWidth},
 		{Name: "brightness", FullText: briText, Markup: "pango", Separator: separator, SeparatorBlockWidth: separatorBlockWidth},
 		{Name: "datetime", FullText: now, Markup: "none", Separator: separator, SeparatorBlockWidth: separatorBlockWidth},
@@ -119,7 +123,7 @@ func getVolume() string {
 	parts := strings.Fields(text)
 	if len(parts) < 2 {
 		log.Printf("[ERROR] output parts is less than 2: %v\n", parts)
-		return "ERR"
+		return "N/A"
 	}
 
 	volStr := parts[1]
@@ -131,4 +135,18 @@ func getVolume() string {
 	}
 
 	return fmt.Sprintf("%d%%", int(volFloat*100))
+}
+
+func getBattery() string {
+	capacityFile := "/sys/class/power_supply/BAT1/capacity"
+
+	capacity, err := os.ReadFile(capacityFile)
+	if err != nil {
+		log.Printf("[ERROR] battery monitor: %s\n", err)
+		return ""
+	}
+
+	capacityStr := strings.TrimSpace(string(capacity))
+
+	return fmt.Sprintf("%s%%", capacityStr)
 }
